@@ -2,9 +2,15 @@ module Main exposing (main)
 
 import Bootstrap.Button as Button
 import Bootstrap.CDN as CDN
+import Bootstrap.Card as Card
+import Bootstrap.Card.Block as CBlock
+import Bootstrap.Form.Input as Input
+import Bootstrap.Utilities.Display as Display
+import Bootstrap.Utilities.Size as Size
+import Bootstrap.Badge as Badge
+
 import Browser
-import Debug
-import Html exposing (Html, a, button, div, input, p, text)
+import Html exposing (Html, a, button, div, h3, input, p, text)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Maybe exposing (..)
@@ -96,13 +102,12 @@ taskRender task model =
             case model.mode == "update" && model.updatingTask.id == task.id of
                 True ->
                     p []
-                        [ input
-                            [ type_ "text"
-                            , placeholder "Typing Todo..."
-                            , value model.updateTaskTitleInput
-                            , onInput ChangeUpdatingTaskTitle
+                        [ Input.text
+                            [ Input.placeholder "Typing Todo..."
+                            , Input.value model.updateTaskTitleInput
+                            , Input.onInput ChangeUpdatingTaskTitle
+                            , Input.attrs [ Size.w50, Display.inlineBlock ]
                             ]
-                            []
                         , Button.button
                             [ Button.primary
                             , Button.attrs [ onClick UpdatedTaskTitle ]
@@ -111,10 +116,14 @@ taskRender task model =
                         ]
 
                 False ->
-                    text ("title: " ++ task.title)
-
+                    text task.title
+        badge = case task.status of
+                     0 -> Badge.badgePrimary [ ] [ text "todo" ]
+                     1 -> Badge.badgeSecondary [ ] [ text "doing" ]
+                     2 -> Badge.badgeSuccess [ ] [ text "doit" ]
+                     _ -> Badge.badgeDanger [ ] [ text "??????" ]
         buttons =
-            [ Button.button [ Button.primary, Button.attrs [ onClick (Update task.id task.title 0) ] ]
+            [ Button.button [ Button.primary, Button.attrs [ onClick (Update task.id task.title 0)] ]
                 [ text "Todo"
                 ]
             , Button.button [ Button.primary, Button.attrs [ onClick (Update task.id task.title 1) ] ]
@@ -132,12 +141,20 @@ taskRender task model =
             ]
     in
     div []
-        ([ text ("状態: " ++ String.fromInt task.status)
-         , text " =>  "
-         , titleInputOrText
-         ]
-            ++ buttons
-        )
+        [ Card.config [ Card.attrs [ Size.w50 ] ]
+            |> Card.header
+                []
+                [ h3 [] [ badge, titleInputOrText ] ]
+            |> Card.block
+                []
+                [ CBlock.titleH4 [] buttons
+                ]
+            |> Card.view
+
+        -- text ("状態: " ++ String.fromInt task.status)
+        --  , text " =>  "
+        --  , titleInputOrText
+        ]
 
 
 
@@ -213,14 +230,13 @@ view model =
     div []
         [ CDN.stylesheet
         , div []
-            [ input
-                [ type_ "text"
-                , id "todo-input"
-                , placeholder "Typing Todo..."
-                , value model.titleInput
-                , onInput ChangeTitleInput
+            [ Input.text
+                [ Input.id "todo-input"
+                , Input.placeholder "Typing Todo..."
+                , Input.value model.titleInput
+                , Input.onInput ChangeTitleInput
+                , Input.attrs [ Size.w50, Display.inlineBlock ]
                 ]
-                []
             , button [ onClick Add ] [ text "create" ]
             ]
         , div [] (List.map (\x -> taskRender x model) model.tasks)
